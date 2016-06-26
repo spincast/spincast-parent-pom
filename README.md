@@ -1,0 +1,1 @@
+Base pom.xml for Spincast projects.
