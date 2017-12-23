@@ -129,19 +129,6 @@
     </build>
     
     <profiles>
-    
-         <!--=================================== 
-         Disable doclint on Java 8.
-         ====================================-->
-        <profile>
-            <id>doclint-java8-disable</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <properties>
-                <javadoc.opts>-Xdoclint:none</javadoc.opts>
-            </properties>
-        </profile>
         
          <!--=================================== 
          The "release" profile.
@@ -188,8 +175,7 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.0.0</version>
                         <configuration>
-                            <!-- See the previous "doclint-java8-disable" profile -->
-                            <additionalparam>${javadoc.opts}</additionalparam>
+                            <doclint>none</doclint>
                         </configuration>
                         <executions>
                             <execution>
