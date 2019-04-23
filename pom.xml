@@ -138,6 +138,7 @@
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
+                    <arguments>-Denv=release</arguments>
                 </configuration>
             </plugin>  
 
@@ -164,6 +165,12 @@
             <properties>
                 <mavenProfileId>release</mavenProfileId>
             </properties>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>release</value>
+                </property>
+            </activation>
             <build> 
                 <plugins>
 
