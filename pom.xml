@@ -95,15 +95,16 @@
                     <version>2.22.1</version>
                     <configuration>
                         <useManifestOnlyJar>true</useManifestOnlyJar>
-                    </configuration>
+                        <systemPropertyVariables>
+                            <!--=================================== 
+                            Make the Maven profile id available during tests
+                            through the "mavenProfileId" System property.
+                            ====================================-->
+                            <mavenProfileId>${mavenProfileId}</mavenProfileId>
+                        </systemPropertyVariables>
+                    </configuration>      
                 </plugin>
-                
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-scm-plugin</artifactId>
-                    <version>1.11.2</version>
-                </plugin>
-                
+
             </plugins>
         </pluginManagement>
         
@@ -160,9 +161,15 @@
          ====================================-->
         <profile> 
             <id>release</id>
+            <properties>
+                <mavenProfileId>release</mavenProfileId>
+            </properties>
             <build> 
-                <plugins>  
-                
+                <plugins>
+
+                    <!--=================================== 
+                    Attach source
+                    ====================================-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
@@ -197,9 +204,9 @@
                         </executions>
                     </plugin>
                     
-                     <!--=================================== 
-                     Sign the artifacts
-                     ====================================-->
+                    <!--=================================== 
+                    Sign the artifacts
+                    ====================================-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -213,11 +220,24 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>  
-                     
+                    </plugin>
+
                 </plugins>
             </build>
         </profile>
+        
+        <!--=================================== 
+        Default profile
+        ====================================-->
+        <profile> 
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <mavenProfileId>default</mavenProfileId>
+            </properties>
+        </profile>
+        
     </profiles>
-    
 </project>
