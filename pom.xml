@@ -34,7 +34,7 @@
     </developers>
     
     <!--=================================== 
-    Override this in the child project!
+    Override this in the children projects!
     ====================================-->
     <scm>
         <connection>scm:git:git@github.com:spincast/spincast-parent-pom</connection>
@@ -57,77 +57,107 @@
     <build>
         <pluginManagement>
             <plugins>
-            
-                <!--=================================== 
-                Java 8 by default.
-                ====================================-->
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.0</version>
-                    <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
-                    </configuration>
-                </plugin>
-                
-                <!--=================================== 
-                This adds the artifact version to the jar Manifest 
-                so it can be read using:
-                "getClass().getPackage().getImplementationVersion()".
-                ====================================-->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.1.1</version>
-                    <configuration>
-                        <archive>                   
-                            <manifest>
-                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                            </manifest>
-                        </archive>
-                    </configuration>
-                </plugin>
-                
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.1</version>
-                    <configuration>
-                        <useManifestOnlyJar>true</useManifestOnlyJar>
-                        <systemPropertyVariables>
-                            <!--=================================== 
-                            Make the Maven profile id available during tests
-                            through the "mavenProfileId" System property.
-                            ====================================-->
-                            <mavenProfileId>${mavenProfileId}</mavenProfileId>
-                        </systemPropertyVariables>
-                    </configuration>      
-                </plugin>
-
             </plugins>
         </pluginManagement>
         
         <plugins>
         
             <!--=================================== 
-            Deploy to Maven Central staging
+            Java 8 by default for now:
+            https://www.spincast.org/documentation#versions
             ====================================-->
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
-                <extensions>true</extensions>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
                 <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
-        
-             <!--=================================== 
-             Release plugin
-             ====================================-->
+            
+            <!--=================================== 
+            This adds the artifact version to .jar Manifest
+            files so it can be read using:
+            "getClass().getPackage().getImplementationVersion()".
+            ====================================-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.1</version>
+                <configuration>
+                    <archive>                   
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            
+            <!--=================================== 
+            Regular tests.
+            ====================================-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.1</version>
+                <configuration>
+                    <useManifestOnlyJar>true</useManifestOnlyJar>
+                    <systemPropertyVariables>
+                        <!--=================================== 
+                        Make the Maven profile id available during tests
+                        through the "mavenProfileId" System property.
+                        ====================================-->
+                        <mavenProfileId>${mavenProfileId}</mavenProfileId>
+                    </systemPropertyVariables>
+                    <excludes>
+                        <!--=================================== 
+                        Those tests will be run at the "install"
+                        phase.
+                        ====================================-->
+                        <exclude>%regex[.*PostInstallTest.class]</exclude>
+                    </excludes>
+                </configuration>      
+            </plugin>
+                
+            <!--=================================== 
+            1. Run the maven-install-plugin first at
+            the "install" phase".
+            ====================================-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>3.0.0-M1</version>
+            </plugin>
+            
+            <!--=================================== 
+            2. Then run the "PostInstallTest" tests at
+            the "install" phase too, so they have access 
+            to the installed artifacts.
+            ====================================-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>%regex[.*PostInstallTest.class]</include> 
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--=================================== 
+            Release plugin
+            ====================================-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
@@ -140,7 +170,7 @@
                     <goals>deploy</goals>
                     <arguments>-Denv=release</arguments>
                 </configuration>
-            </plugin>  
+            </plugin>
 
         </plugins>
     </build>
@@ -227,6 +257,21 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                    
+                    <!--=================================== 
+                    Deploy to Maven Central staging
+                    ====================================-->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.8</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
                     </plugin>
 
                 </plugins>
